@@ -95,6 +95,46 @@ ACL проставлены, и сообщение об успехе.
 
 Producer отправляет сообщения в оба топика, Consumer читает из topic-1 и НЕ может читать topic-2.
 
+'''
+2025-03-03 23:42:39 [SUCCESS] Созданы топики: topic-1, topic-2
+2025-03-03 23:42:40 [SUCCESS] Созданы ACL:
+2025-03-03 23:42:40 [INFO] ACL: User:producer TOPIC CREATE
+2025-03-03 23:42:40 [INFO] ACL: User:producer TOPIC DESCRIBE
+2025-03-03 23:42:40 [INFO] ACL: User:producer TOPIC READ
+2025-03-03 23:42:40 [INFO] ACL: User:producer TOPIC WRITE
+2025-03-03 23:42:40 [INFO] ACL: User:producer TOPIC CREATE
+2025-03-03 23:42:40 [INFO] ACL: User:producer TOPIC DESCRIBE
+2025-03-03 23:42:40 [INFO] ACL: User:producer TOPIC WRITE
+2025-03-03 23:42:40 [INFO] ACL: User:producer CLUSTER DESCRIBE
+2025-03-03 23:42:40 [INFO] ACL: User:producer GROUP READ
+2025-03-03 23:42:40 [INFO] ACL: User:producer GROUP DESCRIBE
+2025-03-03 23:42:40 [INFO] Начало проверки ACL и тестирования Kafka...
+2025-03-03 23:42:40 [INFO] Проверка ACL через AdminClient...
+2025-03-03 23:42:40 [INFO] Проверка ACL для топика: topic-1
+2025-03-03 23:42:40 [INFO] READ: [(pattern=ResourcePattern(resourceType=TOPIC, name=topic-1, patternType=LITERAL), entry=(principal=User:producer, host=*, operation=READ, permissionType=ALLOW))]
+2025-03-03 23:42:40 [INFO] WRITE: [(pattern=ResourcePattern(resourceType=TOPIC, name=topic-1, patternType=LITERAL), entry=(principal=User:producer, host=*, operation=WRITE, permissionType=ALLOW))]
+2025-03-03 23:42:40 [INFO] DESCRIBE: [(pattern=ResourcePattern(resourceType=TOPIC, name=topic-1, patternType=LITERAL), entry=(principal=User:producer, host=*, operation=DESCRIBE, permissionType=ALLOW))]
+2025-03-03 23:42:40 [INFO] Проверка ACL для топика: topic-2
+2025-03-03 23:42:40 [INFO] READ: []
+2025-03-03 23:42:40 [INFO] WRITE: [(pattern=ResourcePattern(resourceType=TOPIC, name=topic-2, patternType=LITERAL), entry=(principal=User:producer, host=*, operation=WRITE, permissionType=ALLOW))]
+2025-03-03 23:42:40 [INFO] DESCRIBE: [(pattern=ResourcePattern(resourceType=TOPIC, name=topic-2, patternType=LITERAL), entry=(principal=User:producer, host=*, operation=DESCRIBE, permissionType=ALLOW))]
+2025-03-03 23:42:40 [INFO] Список доступных топиков: [topic-1, topic-2]
+2025-03-03 23:42:40 [INFO] Начинаем тестирование Producer...
+2025-03-03 23:42:40 [SUCCESS] Сообщение отправлено в topic-1
+2025-03-03 23:42:40 [SUCCESS] Сообщение отправлено в topic-2
+2025-03-03 23:42:40 [SUCCESS] Сообщения успешно отправлены.
+2025-03-03 23:42:40 [INFO] Тестирование Consumer для topic-1
+2025-03-03 23:42:45 [SUCCESS] Consumer прочитал 1 сообщений из topic-1
+2025-03-03 23:42:45 [INFO] offset=0, key=key, value=Hello from topic-1!
+2025-03-03 23:42:45 [INFO] Тестирование Consumer для topic-2
+2025-03-03 23:42:48 2025-03-03 18:42:48 WARN  o.a.k.c.consumer.internals.Fetcher - [Consumer clientId=consumer-group1-4, groupId=group1] Not authorized to read from partition topic-2-0.
+2025-03-03 23:42:48 2025-03-03 18:42:48 ERROR o.a.k.c.c.i.ConsumerCoordinator - [Consumer clientId=consumer-group1-4, groupId=group1] Offset commit failed on partition topic-2-0 at offset 0: Topic authorization failed.
+2025-03-03 23:42:48 2025-03-03 18:42:48 ERROR o.a.k.c.c.i.ConsumerCoordinator - [Consumer clientId=consumer-group1-4, groupId=group1] Not authorized to commit to topics [topic-2]
+2025-03-03 23:42:48 2025-03-03 18:42:48 WARN  o.a.k.c.c.i.ConsumerCoordinator - [Consumer clientId=consumer-group1-4, groupId=group1] Synchronous auto-commit of offsets {topic-2-0=OffsetAndMetadata{offset=0, leaderEpoch=null, metadata=''}} failed: Not authorized to access topics: [topic-2]
+2025-03-03 23:42:48 [SUCCESS] Проверка ACL завершена успешно!
+2025-03-03 23:42:48 [ERROR] Ошибка при чтении topic-2: Not authorized to access topics: [topic-2]
+'''
+
 
    ## 5. Как проверить вручную
 
