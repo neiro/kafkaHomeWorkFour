@@ -1,0 +1,43 @@
+spring:
+  kafka:
+    listener:
+      auto-startup: false  # Отключаем автозапуск всех @KafkaListener (ручной контроль)
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9093}  # Адреса Kafka-брокеров
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer  # Сериализация ключей
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer  # Сериализация значений
+
+    consumer:
+      group-id: group1  # Группа потребителей Kafka
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer  # Десериализация ключей
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer  # Десериализация значений
+
+    # Дополнительные настройки безопасности Kafka
+    properties:
+      security.protocol: SASL_SSL  # Используем безопасный протокол SASL_SSL
+      sasl.mechanism: PLAIN  # Механизм аутентификации SASL
+      sasl.jaas.config: >  # Конфигурация аутентификации через SASL PLAIN
+        org.apache.kafka.common.security.plain.PlainLoginModule required
+        username="producer"
+        password="producer-secret";
+      
+      # SSL-конфигурация (хранилища сертификатов)
+      ssl.truststore.location: ${SSL_TRUSTSTORE_LOCATION}
+      ssl.truststore.password: ${SSL_TRUSTSTORE_PASSWORD}
+      ssl.keystore.location: ${SSL_KEYSTORE_LOCATION}
+      ssl.keystore.password: ${SSL_KEYSTORE_PASSWORD}
+      ssl.key.password: ${SSL_KEY_PASSWORD}
+
+# Дублируем основные настройки Kafka
+kafka:
+  bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9093}
+  ssl:
+    truststore:
+      location: ${SSL_TRUSTSTORE_LOCATION}
+      password: ${SSL_TRUSTSTORE_PASSWORD}
+    keystore:
+      location: ${SSL_KEYSTORE_LOCATION}
+      password: ${SSL_KEYSTORE_PASSWORD}
+    key:
+      password: ${SSL_KEY_PASSWORD}

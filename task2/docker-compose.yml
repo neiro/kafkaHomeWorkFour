@@ -1,0 +1,215 @@
+version: "3.8"
+services:
+
+  cert-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile.cert
+    container_name: cert-generator  
+    restart: always  
+    volumes:
+      - ./certs:/var/ssl/private
+    environment:
+      CA_PASSWORD: ${CA_PASSWORD}
+    networks:
+      - kafka_net
+    
+
+  kafka-acl-init:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    container_name: java-app      
+    restart: always
+    volumes:
+      - ./certs/producer:/var/ssl/private
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: "kafka1:9093,kafka2:9093,kafka3:9093"
+      SECURITY_PROTOCOL: "SASL_SSL"
+      SASL_MECHANISM: PLAIN
+      SSL_TRUSTSTORE_LOCATION: "/var/ssl/private/producer.truststore.jks"
+      SSL_TRUSTSTORE_PASSWORD: "changeit"
+      SSL_KEYSTORE_LOCATION: "/var/ssl/private/producer.keystore.jks"
+      SSL_KEYSTORE_PASSWORD: "changeit"
+      SSL_KEY_PASSWORD: "changeit"
+      kafka__bootstrap_servers: "kafka1:9093,kafka2:9093,kafka3:9093"
+    depends_on:
+      # - cert-generator
+      - kafka1
+      - kafka2
+      - kafka3
+    networks:
+      - kafka_net
+
+
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    restart: always
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SASL_ENABLED: "true"
+      ZOOKEEPER_AUTH_PROVIDER_1: "org.apache.zookeeper.server.auth.SASLAuthenticationProvider"
+      ZOOKEEPER_REQUIRE_CLIENT_AUTH_SCHEME: "sasl"
+      ZOOKEEPER_SASL_ENABLE: "true"
+      ZOOKEEPER_SASL_SERVER_CONF: "/etc/zookeeper/conf/zookeeper.sasl.jaas.conf"
+      # Указываем путь к JAAS-конфигурации для ZooKeeper
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/zookeeper/secrets/zookeeper.sasl.jaas.conf -Dzookeeper.allowSaslFailedClients=false -Dzookeeper.requireClientAuthScheme=sasl"
+    volumes:
+      - ./certs:/etc/zookeeper/secrets:ro
+    networks:
+      - kafka_net
+    # command: >
+    #   bash -c "
+    #   /etc/confluent/docker/run & 
+    #   sleep 5;
+    #   zookeeper-shell localhost:2181 <<EOF
+    #   setAcl / sasl:kafka1:cdrwa, sasl:kafka2:cdrwa, sasl:kafka3:cdrwa
+    #   setAcl /brokers sasl:kafka1:cdrwa, sasl:kafka2:cdrwa, sasl:kafka3:cdrwa
+    #   setAcl /brokers/ids sasl:kafka1:cdrwa, sasl:kafka2:cdrwa, sasl:kafka3:cdrwa
+    #   EOF
+    #   wait
+    #   "
+
+  kafka1:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka1
+    restart: always
+    depends_on:
+      - zookeeper
+    ports:
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # Используем SASL_SSL для защищённых подключений клиентов
+      KAFKA_LISTENERS: SASL_SSL://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://kafka1:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL
+      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_SSL
+      # SSL настройки – файлы сертификатов смонтированы через volume
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka1.keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: keystore_creds
+      KAFKA_SSL_KEY_CREDENTIALS: keystore_creds      
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka1.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: truststore_creds
+      KAFKA_SSL_CLIENT_AUTH: required
+      # Указываем путь к JAAS-конфигурационному файлу для SASL/PLAIN
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/secrets/kafka_server_jaas.conf"
+      # ACL параметры
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.authorizer.AclAuthorizer
+      KAFKA_SUPER_USERS: "User:admin;User:CN=kafka1;User:CN=kafka2;User:CN=kafka3;"
+      # Для репликации 
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_LISTENER_NAME_BROKER_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_ZOOKEEPER_SASL_CLIENT: "true"
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: https
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: "PLAIN"
+      KAFKA_SASL_ENABLED_MECHANISMS: "PLAIN,DIGEST-MD5"
+    volumes:
+      - ./certs/kafka1:/etc/kafka/secrets
+      - kafka1_data:/var/lib/kafka/data
+      - ./entrypoint_kafka.sh:/usr/local/bin/entrypoint_kafka.sh:ro
+    entrypoint: ["/usr/local/bin/entrypoint_kafka.sh"]
+    command: ["/etc/confluent/docker/run"]
+    networks:
+      - kafka_net
+
+  kafka2:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka2
+    restart: always
+    depends_on:
+      - zookeeper
+    ports:
+      - "9094:9093"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: SASL_SSL://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://kafka2:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL
+      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_SSL
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka2.keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: keystore_creds
+      KAFKA_SSL_KEY_CREDENTIALS: keystore_creds     
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka2.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: truststore_creds
+      KAFKA_SSL_CLIENT_AUTH: required
+      # Указываем путь к JAAS-конфигурационному файлу для SASL/PLAIN
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/secrets/kafka_server_jaas.conf"      
+      # ACL параметры
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.authorizer.AclAuthorizer
+      KAFKA_SUPER_USERS: "User:admin;User:CN=kafka1;User:CN=kafka2;User:CN=kafka3;"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_LISTENER_NAME_BROKER_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_ZOOKEEPER_SASL_CLIENT: "true"
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: https
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: "PLAIN"
+      KAFKA_SASL_ENABLED_MECHANISMS: "PLAIN,DIGEST-MD5"
+    volumes:
+      - ./certs/kafka2:/etc/kafka/secrets
+      - kafka2_data:/var/lib/kafka/data
+      - ./entrypoint_kafka.sh:/usr/local/bin/entrypoint_kafka.sh:ro
+    entrypoint: ["/usr/local/bin/entrypoint_kafka.sh"]
+    command: ["/etc/confluent/docker/run"]      
+    networks:
+      - kafka_net
+
+  kafka3:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka3
+    restart: always
+    depends_on:
+      - zookeeper
+    ports:
+      - "9095:9093"
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: SASL_SSL://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://kafka3:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL
+      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_SSL
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka3.keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: keystore_creds
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka3.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: truststore_creds
+      KAFKA_SSL_CLIENT_AUTH: required
+      KAFKA_SSL_KEY_CREDENTIALS: keystore_creds     
+      # Указываем путь к JAAS-конфигурационному файлу для SASL/PLAIN
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/secrets/kafka_server_jaas.conf"      
+      # ACL параметры
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.authorizer.AclAuthorizer
+      KAFKA_SUPER_USERS: "User:admin;User:CN=kafka1;User:CN=kafka2;User:CN=kafka3;"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_LISTENER_NAME_BROKER_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_ZOOKEEPER_SASL_CLIENT: "true"
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: https
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: "PLAIN"
+      KAFKA_SASL_ENABLED_MECHANISMS: "PLAIN,DIGEST-MD5"
+    volumes:
+      - ./certs/kafka3:/etc/kafka/secrets
+      - kafka3_data:/var/lib/kafka/data
+      - ./entrypoint_kafka.sh:/usr/local/bin/entrypoint_kafka.sh:ro
+    entrypoint: ["/usr/local/bin/entrypoint_kafka.sh"]
+    command: ["/etc/confluent/docker/run"]      
+    networks:
+      - kafka_net
+
+volumes:
+  kafka1_data:
+  kafka2_data:
+  kafka3_data:
+
+
+networks:
+  kafka_net:
+    driver: bridge
