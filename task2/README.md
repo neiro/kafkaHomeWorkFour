@@ -94,8 +94,7 @@ Java-приложение kafka-acl-init автоматически создас
 ACL проставлены, и сообщение об успехе.
 
 Producer отправляет сообщения в оба топика, Consumer читает из topic-1 и НЕ может читать topic-2.
-
-'''
+```log
 2025-03-03 23:42:39 [SUCCESS] Созданы топики: topic-1, topic-2
 2025-03-03 23:42:40 [SUCCESS] Созданы ACL:
 2025-03-03 23:42:40 [INFO] ACL: User:producer TOPIC CREATE
@@ -133,8 +132,7 @@ Producer отправляет сообщения в оба топика, Consume
 2025-03-03 23:42:48 2025-03-03 18:42:48 WARN  o.a.k.c.c.i.ConsumerCoordinator - [Consumer clientId=consumer-group1-4, groupId=group1] Synchronous auto-commit of offsets {topic-2-0=OffsetAndMetadata{offset=0, leaderEpoch=null, metadata=''}} failed: Not authorized to access topics: [topic-2]
 2025-03-03 23:42:48 [SUCCESS] Проверка ACL завершена успешно!
 2025-03-03 23:42:48 [ERROR] Ошибка при чтении topic-2: Not authorized to access topics: [topic-2]
-'''
-
+```
 
    ## 5. Как проверить вручную
 
