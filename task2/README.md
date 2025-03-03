@@ -48,6 +48,46 @@
 - Создаёт корневой сертификат (CA).
 - Генерирует Keystore/Truststore для каждого брокера (`kafka1`, `kafka2`, `kafka3`) и клиента (`producer`).
 - Выкладывает готовые `.jks`-файлы и метку `done.txt` для сигнала о завершении.
+```log
+2025-03-03 23:47:51 Generating a RSA private key
+2025-03-03 23:47:51 ......................+++++
+2025-03-03 23:47:51 ................................................+++++
+2025-03-03 23:47:51 writing new private key to 'ca-key'
+2025-03-03 23:47:51 -----
+2025-03-03 23:47:52 Signature ok
+2025-03-03 23:47:52 subject=CN = kafka1
+2025-03-03 23:47:52 Getting CA Private Key
+2025-03-03 23:47:51 === Создание корневого сертификата (CA) ===
+2025-03-03 23:47:51 === Генерация сертификатов для kafka1 ===
+2025-03-03 23:47:53 Certificate was added to keystore
+2025-03-03 23:47:54 Certificate reply was installed in keystore
+2025-03-03 23:47:54 Certificate was added to keystore
+2025-03-03 23:47:54 Добавлен kafka_server_jaas.conf в kafka1
+2025-03-03 23:47:54 === Генерация сертификатов для kafka2 ===
+2025-03-03 23:47:55 Signature ok
+2025-03-03 23:47:55 subject=CN = kafka2
+2025-03-03 23:47:55 Getting CA Private Key
+2025-03-03 23:47:56 Certificate was added to keystore
+2025-03-03 23:47:57 Certificate reply was installed in keystore
+2025-03-03 23:47:57 Certificate was added to keystore
+2025-03-03 23:47:57 Добавлен kafka_server_jaas.conf в kafka2
+2025-03-03 23:47:57 === Генерация сертификатов для kafka3 ===
+2025-03-03 23:47:58 Signature ok
+2025-03-03 23:47:58 subject=CN = kafka3
+2025-03-03 23:47:58 Getting CA Private Key
+2025-03-03 23:47:59 Certificate was added to keystore
+2025-03-03 23:48:00 Certificate reply was installed in keystore
+2025-03-03 23:48:00 Certificate was added to keystore
+2025-03-03 23:48:00 Добавлен kafka_server_jaas.conf в kafka3
+2025-03-03 23:48:00 === Генерация сертификатов для клиента (producer) ===
+2025-03-03 23:48:02 Signature ok
+2025-03-03 23:48:02 subject=CN = producer
+2025-03-03 23:48:02 Getting CA Private Key
+2025-03-03 23:48:02 Certificate was added to keystore
+2025-03-03 23:48:03 Certificate reply was installed in keystore
+2025-03-03 23:48:03 Certificate was added to keystore
+2025-03-03 23:48:04 Сертификаты успешно сгенерированы.
+```
 
 ### Шаг 2. Запуск кластера Kafka и Zookeeper с SSL
 
