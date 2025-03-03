@@ -1,4 +1,4 @@
-# README
+# Настройка защищённого соединения и управление доступом
 
 ## 1. Обзор
 
@@ -72,8 +72,8 @@
 1. Клонируйте репозиторий:
 
 ```bash
-    git clone <адрес-репозитория>
-    cd <папка-репозитория>
+    git clone https://github.com/neiro/kafkaHomeWorkFour
+    cd kafkaHomeWorkFour
 ```
 2. Запустите Docker Compose:
 
